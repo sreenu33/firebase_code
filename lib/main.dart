@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:learn_firebase/views/home_screen.dart';
+import 'package:learn_firebase/views/registration_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -11,12 +11,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       theme: ThemeData(
       
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const HomeScreen(),
+      home: const RegistrationPage(),
     );
   }
 }
