@@ -1,9 +1,11 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:learn_firebase/views/login_page.dart';
 import 'package:learn_firebase/widgets/app_colored_button.dart';
 
 import '../widgets/app_text_form_field.dart';
 import '../widgets/app_password_form_field.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class RegistrationPage extends StatefulWidget {
   const RegistrationPage({super.key});
@@ -168,15 +170,62 @@ class _RegistrationPageState extends State<RegistrationPage> {
     );
   }
 
-  void _onRegister() {
+  void _onRegister() async {
     if (_formKey.currentState!.validate()) {
-      FocusScope.of(context).unfocus();
+      FocusScope.of(context).unfocus(); // Close keyboard
 
-      // API / Firebase / GetX / Bloc logic here
+      String email = _emailController.text.trim();
+      String password = _passwordController.text.trim();
+      String firstName = _firstNameController.text.trim();
+      String lastName = _lastNameController.text.trim();
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Registration Successful")));
+      try {
+        // Create user with email & password
+        UserCredential userCredential = await FirebaseAuth.instance
+            .createUserWithEmailAndPassword(email: email, password: password);
+        // ✅ ADD THIS BLOCK IMMEDIATELY AFTER 👇
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userCredential.user!.uid)
+            .set({
+              'firstName': firstName,
+              'lastName': lastName,
+              'email': email,
+              'createdAt': FieldValue.serverTimestamp(),
+            });
+
+        // Optionally, update display name
+        await userCredential.user?.updateDisplayName('$firstName $lastName');
+
+        // Registration success
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Registration Successful")),
+        );
+
+        // Navigate to login page or home page
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginPage()),
+        );
+      } on FirebaseAuthException catch (e) {
+        String message = "Registration failed";
+
+        if (e.code == 'weak-password') {
+          message = "The password is too weak.";
+        } else if (e.code == 'email-already-in-use') {
+          message = "This email is already registered.";
+        } else if (e.code == 'invalid-email') {
+          message = "The email is invalid.";
+        }
+
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
+      } catch (e) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Error: $e")));
+      }
     }
   }
 }
