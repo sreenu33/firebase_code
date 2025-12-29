@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:learn_firebase/views/fotgot_password_page.dart';
+import 'package:learn_firebase/views/home_page.dart';
 import 'package:learn_firebase/views/registration_page.dart';
 import 'package:learn_firebase/widgets/app_colored_button.dart';
 
@@ -140,14 +141,22 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _onLogin() {
-    if (_formKey.currentState!.validate()) {
-      FocusScope.of(context).unfocus();
+  if (_formKey.currentState!.validate()) {
+    FocusScope.of(context).unfocus();
 
-      // Login API / Firebase logic here
+    // Navigate to Home first
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const HomePage()),
+    );
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Login Successful")));
-    }
+    // Show SnackBar on next frame (Home context)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Login Successful")),
+      );
+    });
   }
+}
+
 }
